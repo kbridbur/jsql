@@ -9,6 +9,7 @@
   "author": "Anthony Liu",
   "license": "MIT",
   "dependencies": {
-    "esprima": "^2.7.2"
+    "esprima": "^2.7.2",
+    "squel": "^5.3.3"
   }
 }

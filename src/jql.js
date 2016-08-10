@@ -2,12 +2,12 @@
 // @author Anthony Liu
 
 var esprima = require('esprima');
-var Select = require('./sql/select');
+var squel = require('squel');
 
 class Compiler {
   constructor(schema) {
     this.schema = schema;
-    this.select = new Select();
+    this.select = squel.select();
   }
 
   compile(query) {
@@ -16,15 +16,28 @@ class Compiler {
     var entryPoint = expression.callee.object.name;
     var databaseInfo = this.schema.Database[entryPoint];
 
-    this.select.enter(databaseInfo.start);
+    this.select.from(databaseInfo.start);
 
     var mapBody = expression.arguments[0].body.body;
     var returnValue = mapBody[0].argument;
-    var property = returnValue.property.name;
 
-    this.select.addColumn(property);
+    switch (returnValue.type) {
+      case 'MemberExpression':
+        var property = returnValue.property.name;
+        this.select.field(property);
+        break;
 
-    return this.select.getMysql();
+      case 'ObjectExpression':
+        for (var property of returnValue.properties) {
+          this.select.field(property.value.property.name, property.key.value);
+        }
+        break;
+    }
+
+    return {
+      sql: this.select.toString(),
+      js: ''
+    };
   }
 }
 
