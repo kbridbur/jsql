@@ -6,10 +6,7 @@ var PersonSchema = require('../src/schemas/person');
 var compiler = new JQL(PersonSchema);
 var query = `
   people.map(function(person) {
-    return {  
-      'their age': person.age,
-      'spouse name': person.spouse.name
-    };
+    return person.home.city;
   })
 `;
 

@@ -5,7 +5,7 @@ var PersonSchema = require('../src/schemas/person');
 describe('Compiler', function() {
   describe('#compile()', function() {
     // single primitive column
-    it('should properly select for a single primitive column', function() {
+    it('should properly select a single primitive column', function() {
       var compiler = new JQL(PersonSchema);
       var query = 'people.map(function(person){return person.name;})';
       var result = {
@@ -18,7 +18,7 @@ describe('Compiler', function() {
     });
 
     // single primitive column in an object
-    it('should properly select for simple objects', function() {
+    it('should properly select simple objects', function() {
       var compiler = new JQL(PersonSchema);
       var query = `
         people.map(function(person) {
@@ -37,7 +37,7 @@ describe('Compiler', function() {
     });
 
     // two primitive columns in an object
-    it('should properly select for objects with multiple properties', function() {
+    it('should properly select objects with multiple properties', function() {
       var compiler = new JQL(PersonSchema);
       var query = `
         people.map(function(person) {
@@ -56,8 +56,8 @@ describe('Compiler', function() {
       );
     });
 
-    // requires a join
-    it('should properly select for properties that require joins', function() {
+    // requires a same-table join
+    it('should properly select properties that require same-table joins', function() {
       var compiler = new JQL(PersonSchema);
       var query = `
         people.map(function(person) {
@@ -76,22 +76,87 @@ describe('Compiler', function() {
       );
     });
 
-    // an object with a property that requires a join
-    it('should properly select for objects with properties that require joins', function() {
+    // an object with a property that requires a same-table join
+    it('should properly select objects that require same-table joins', function() {
       var compiler = new JQL(PersonSchema);
       var query = `
         people.map(function(person) {
           return {  
             'their age': person.age,
-            'spouse name': person.spouse.name
+            'spouses name': person.spouse.name
           };
         })
       `;
       var result = {
-        sql: 'SELECT `0`.age AS "their age", `1`.name AS "spouse name" FROM' +
+        sql: 'SELECT `0`.age AS "their age", `1`.name AS "spouses name" FROM' +
             ' PeopleTable `0`' +
             ' INNER JOIN PeopleTable `1` ON' +
             ' (`0`.spouse = `1`.id)',
+        js: ''
+      };
+      assert.deepEqual(
+        compiler.compile(query), result
+      );
+    });
+
+    // an object with a property that requires two same-table joins
+    it('should properly select objects that require two same-table joins', function() {
+      var compiler = new JQL(PersonSchema);
+      var query = `
+        people.map(function(person) {
+          return {  
+            'their age': person.age,
+            'spouses spouses name': person.spouse.spouse.name
+          };
+        })
+      `;
+      var result = {
+        sql: 'SELECT `0`.age AS "their age", `2`.name AS "spouses spouses name" FROM' +
+            ' PeopleTable `0`' +
+            ' INNER JOIN PeopleTable `1` ON' +
+            ' (`0`.spouse = `1`.id)'+
+            ' INNER JOIN PeopleTable `2` ON' +
+            ' (`1`.spouse = `2`.id)',
+        js: ''
+      };
+      assert.deepEqual(
+        compiler.compile(query), result
+      );
+    });
+
+    // requires a cross-table join
+    it('should properly select properties that require cross-table joins', function() {
+      var compiler = new JQL(PersonSchema);
+      var query = `
+        people.map(function(person) {
+          return person.home.city;
+        })
+      `;
+      var result = {
+        sql: 'SELECT `1`.city FROM' +
+            ' PeopleTable `0`' +
+            ' INNER JOIN AddressTable `1` ON' +
+            ' (`0`.home = `1`.id)',
+        js: ''
+      };
+      assert.deepEqual(
+        compiler.compile(query), result
+      );
+    });
+
+    // selecting an object as a property
+    it('should properly select properties that are actually objects', function() {
+      var compiler = new JQL(PersonSchema);
+      var query = `
+        people.map(function(person) {
+          return person.home;
+        })
+      `;
+      var result = {
+        sql: 'SELECT `1`.* FROM' +
+            ' PeopleTable `0`' +
+            ' INNER JOIN AddressTable `1` ON' +
+            ' (`0`.home = `1`.id)',
         js: ''
       };
       assert.deepEqual(
