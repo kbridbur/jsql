@@ -4,7 +4,7 @@ var PersonSchema = require('../src/schemas/person');
 
 describe('Compiler', function() {
   describe('#compile()', function() {
-    it('should properly select primitive columns', function() {
+    it('should properly select for single, primitive columns', function() {
       var compiler = new JQL(PersonSchema);
       var query = 'people.map(function(person){return person.name;})';
       var sql = 'SELECT `name` FROM `PeopleTable`';
