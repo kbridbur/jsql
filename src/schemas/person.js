@@ -36,7 +36,7 @@ id   name age  spouse
 module.exports = {
   Database: {
     people: {
-      start: 'PeopleTable',
+      table: 'PeopleTable',
       content: 'Person'
     }
   },
