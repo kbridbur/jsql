@@ -1,12 +1,12 @@
 var assert = require('assert');
-var JQL = require('../src/jql');
-var PersonSchema = require('../src/schemas/person');
+var JSQL = require('../src/jsql');
+var people = require('../src/models/people');
 
 describe('Compiler', function() {
   describe('#compile()', function() {
     // single primitive column
     it('should properly select a single primitive column', function() {
-      var compiler = new JQL(PersonSchema);
+      var compiler = new JSQL(people.schema);
       var query = 'people.map(function(person){return person.name;})';
       var result = {
         sql: 'SELECT `0`.name FROM PeopleTable `0`',
@@ -19,7 +19,7 @@ describe('Compiler', function() {
 
     // single primitive column in an object
     it('should properly select simple objects', function() {
-      var compiler = new JQL(PersonSchema);
+      var compiler = new JSQL(people.schema);
       var query = `
         people.map(function(person) {
           return {
@@ -38,7 +38,7 @@ describe('Compiler', function() {
 
     // two primitive columns in an object
     it('should properly select objects with multiple properties', function() {
-      var compiler = new JQL(PersonSchema);
+      var compiler = new JSQL(people.schema);
       var query = `
         people.map(function(person) {
           return {
@@ -58,7 +58,7 @@ describe('Compiler', function() {
 
     // requires a same-table join
     it('should properly select properties that require same-table joins', function() {
-      var compiler = new JQL(PersonSchema);
+      var compiler = new JSQL(people.schema);
       var query = `
         people.map(function(person) {
           return person.spouse.name;
@@ -78,7 +78,7 @@ describe('Compiler', function() {
 
     // an object with a property that requires a same-table join
     it('should properly select objects that require same-table joins', function() {
-      var compiler = new JQL(PersonSchema);
+      var compiler = new JSQL(people.schema);
       var query = `
         people.map(function(person) {
           return {  
@@ -101,7 +101,7 @@ describe('Compiler', function() {
 
     // an object with a property that requires two same-table joins
     it('should properly select objects that require two same-table joins', function() {
-      var compiler = new JQL(PersonSchema);
+      var compiler = new JSQL(people.schema);
       var query = `
         people.map(function(person) {
           return {  
@@ -126,7 +126,7 @@ describe('Compiler', function() {
 
     // requires a cross-table join
     it('should properly select properties that require cross-table joins', function() {
-      var compiler = new JQL(PersonSchema);
+      var compiler = new JSQL(people.schema);
       var query = `
         people.map(function(person) {
           return person.home.city;
@@ -146,7 +146,7 @@ describe('Compiler', function() {
 
     // selecting an object as a property
     it('should properly select properties that are actually objects', function() {
-      var compiler = new JQL(PersonSchema);
+      var compiler = new JSQL(people.schema);
       var query = `
         people.map(function(person) {
           return person.home;
@@ -158,6 +158,26 @@ describe('Compiler', function() {
             ' INNER JOIN AddressTable `1` ON' +
             ' (`0`.home = `1`.id)',
         js: ''
+      };
+      assert.deepEqual(
+        compiler.compile(query), result
+      );
+    });
+
+    // should allow for one-to-many joins
+    it('should properly select properties that represent arrays of values', function() {
+      var compiler = new JSQL(people.schema);
+      var query = `
+        people.map(function(person) {
+          return person.pets;
+        })
+      `;
+      var result = {
+        sql: 'SELECT `0`.id, `1`.* FROM' +
+            ' PeopleTable `0`' +
+            ' INNER JOIN PetsTable `1` ON' +
+            ' (`0`.id = `1`.owner)', // TODO: check sql
+        js: '// consolidate the pets to their owners' // TODO: write javascript
       };
       assert.deepEqual(
         compiler.compile(query), result

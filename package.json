@@ -1,5 +1,5 @@
 {
-  "name": "js-to-sql",
+  "name": "jsql",
   "version": "0.1",
   "description": "Compiles JavaScript JSON access to SQL.",
   "main": "src/index.js",

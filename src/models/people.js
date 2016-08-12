@@ -1,6 +1,9 @@
-var primitives = require('./primitives');
-var String = primitives.String;
-var Int = primitives.Int;
+// People model
+// @author Anthony Liu
+
+var String = require('./primitives').String;
+var Int = require('./primitives').Int;
+var JSQLModel = require('../jsql-model');
 
 // ASSUMPTIONS
 //  * all top-level objects have an implied, unique, primary key called 'id'
@@ -63,7 +66,7 @@ id   name age  spouse
 }
 */
 
-module.exports = {
+schema = {
   Database: {
     people: {
       table: 'PeopleTable',
@@ -73,6 +76,11 @@ module.exports = {
     addresses: {
       table: 'AddressTable',
       content: 'Address'
+    },
+
+    pets: {
+      table: 'PetsTable',
+      content: 'Pet'
     }
   },
 
@@ -80,7 +88,13 @@ module.exports = {
     name: String,
     age: Int,
     spouse: 'Person',
+    pets: '[Pet]',
     home: 'Address'
+  },
+
+  Pet: {
+    name: String,
+    owner: 'Person'
   },
 
   Address: {
@@ -90,3 +104,5 @@ module.exports = {
     zip: Int 
   }
 };
+
+module.exports = new JSQLModel('people', schema);
