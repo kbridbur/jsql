@@ -1,6 +1,6 @@
 {
   "name": "jsql",
-  "version": "0.1",
+  "version": "0.1.0",
   "description": "Compiles JavaScript JSON access to SQL.",
   "main": "src/index.js",
   "scripts": {

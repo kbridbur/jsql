@@ -50,13 +50,13 @@ class Compiler {
   getReturnValue(returnValue) {
     switch (returnValue.type) {
       case 'MemberExpression':
-        var property = this.getProperty(returnValue);
-        this.getColumnInContext(property);
+        var value = this.getValue(returnValue);
+        this.getColumnInContext(value);
         break;
 
       case 'ObjectExpression':
         for (var pair of returnValue.properties) {
-          var property = this.getProperty(pair.value);
+          var property = this.getValue(pair.value);
           this.getColumnInContext(
             property,
             pair.key.value
@@ -64,6 +64,21 @@ class Compiler {
         }
         break;
     }
+  }
+
+  getValue(path) {
+    var objectContext = path.object;
+    if ('name' in objectContext) {
+      var terminalName = path.property.name;
+      var terminalType = this.schema[this.currentModel][terminalName];
+      if (typeof terminalType === 'string') {
+        var terminalTable = this.modelToTableMapping[terminalType];
+        this.joinToTable(terminalName, terminalTable);
+	return '*'; 
+      }
+    }
+
+    return this.getProperty(path);
   }
 
   getProperty(path) {
@@ -77,7 +92,7 @@ class Compiler {
       this.joinToTable(property, table);
       return path.property.name;
     }
-    return path; 
+
   }
 
   joinToTable(column, table) {

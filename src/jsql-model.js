@@ -19,10 +19,7 @@ class JSQLModel {
 
   execute(source) {
     var jsqlCode = this.jsql.compile(source);
-    console.log(source);
-    console.log();
-    console.log(jsqlCode);
-    return [];
+    return jsqlCode;
   }
 }
 
